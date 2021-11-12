@@ -10,17 +10,11 @@ import matplotlib.dates as mdates
 import random
 import re
 
-#At the beggining, the code used to get data from a site that isn't working anymore (https://cidac.campos.rj.gov.br/coronavirus/)
-#I used bs4 to access each class and take the data
-#I had to program this class to make the bot work again
-
-#This class is used to get covid data from the official site
 class Covid_Data():
     
     def __init__(self):
         self.soup = ''
     
-    #Take the newest report url and returns it
     def get_url(self):
         
         page = requests.get('https://www.campos.rj.gov.br/search.php?PGpagina=1&PGporPagina=10&s=boletim')
@@ -30,7 +24,6 @@ class Covid_Data():
         
         return('https://www.campos.rj.gov.br/'+link)
     
-    #Requests the url and treats the plain text so I can extract the data needed
     def urlFinder(self, url):
         page = requests.get(url)
 
@@ -58,19 +51,17 @@ class Covid_Data():
         
         return(self.soup)
 
-    #Takes the date of the newest covid report
+    
+    def last_page(self):
+        if self.soup.find(class_='col-md-12 imateria') == '':
+            return(True)
+
     def date_finder(self):
 
-        #Finds it on the header of the page
         results_date = self.soup.find(class_='col-md-12')
 
-        #Get the text
         date_check = (results_date.get_text())
-        #Show the data
         print(date_check)
-
-        #Sometimes the report may write the date wrongly, so I double check
-        #It didn't used to happen, so this bit of code came some months after
         match = re.search(r'(\d+/\d+/\d+)',date_check)
 
         try: #a prefeitura decidiu mandar um 1°/11/2021 entao agora existe essa excecao
@@ -81,7 +72,6 @@ class Covid_Data():
             match = match.replace("boletimcoronavirus–", "")            
             return(match)
             
-    #Extract the number of confirmed covid cases
     def numero_casos(self):
 
         match = re.search(r'(confirmation(\d+))', self.casos)[0]
@@ -89,7 +79,6 @@ class Covid_Data():
         
         return(match)
 
-    #Extract the number of confirmed flu syndrome cases (?)
     def sindrome_gripal(self):
 
         match = re.search(r'(gripal\(sg\)(\d+))', self.casos)[0]
@@ -97,7 +86,6 @@ class Covid_Data():
         
         return(match)
     
-    #Extract the number of confirmed severe acute respiratory syndrome cases (?)
     def srag(self):
 
         match = re.search(r'(grave\(srag\)(\d+))', self.casos)[0]
@@ -105,7 +93,6 @@ class Covid_Data():
         
         return(match)
     
-    #Extract the number of confirmed deaths
     def obitos(self):
         
         match = re.search(r'(obitos(\d+))', self.casos)[0]
@@ -113,25 +100,20 @@ class Covid_Data():
         
         return(match)
     
-    #Extract vaccination numbers
     def vacina(self):
         
-        #First dose
         primeira_dose = re.search(r'(primeiradose–(\d+))', self.casos)[0]
         primeira_dose = primeira_dose.replace("primeiradose–", "")
         
-        #Second dose
         segunda_dose = re.search(r'(segundadose–(\d+))', self.casos)[0]
         segunda_dose = segunda_dose.replace("segundadose–", "")       
         
-        #Unique dose
         dose_unica = re.search(r'(doseunica–(\d+))', self.casos)[0]
         dose_unica = dose_unica.replace("doseunica–", "")       
         
         
         return([primeira_dose, segunda_dose, dose_unica])
     
-    #Extract the hospital occupation percentage
     def ocupacao_leitos(self):
         
         try:
@@ -155,7 +137,6 @@ class Covid_Data():
         
         return([uti, clinica])
     
-    #Extract the amount of people waiting for a hospital bed
     def fila_espera(self):
         
         try:
@@ -165,13 +146,12 @@ class Covid_Data():
         except TypeError:
             return("0")
     
+
 class analiseCampos:
     
     def __init__(self, dataset):
         self.dataset = dataset
     
-    #The government gives the total amount of covid cases
-    #This organizes those cases by daily confirmation
     def novos_casos(self):
         
         #CODIGO PARA SEPARAR NOVOS CASOS POR DIA
@@ -184,8 +164,7 @@ class analiseCampos:
     
         self.dataset.insert(2, 'Novos Casos', novosCasos)
   
-    #The government gives the total amount of deaths
-    #This organizes those death by daily confirmation      
+      
     def novos_obitos(self):
     
         #CODIGO PARA SEPARAR NOVOS OBITOS POR DIA
@@ -198,7 +177,6 @@ class analiseCampos:
 
         self.dataset.insert(5, 'Novos Obitos Confirmados', novosObitos)
     
-    #Separates the covid confirmations by week
     def por_semana(self):
 
         #Script para separar os casos por semana
@@ -219,15 +197,22 @@ class analiseCampos:
         xBefore = fixWeek[df.Data.dt.dayofweek.iloc[0]]
         for x in df.Data.dt.dayofweek:
 
+            #print("xBefore: " + str(xBefore))
+
             #CHECA SE EH UM PROXIMO DIA OU O PRIMEIRO DA SEMANA JA QUE 0 EH MENOR QUE 6
             if ((fixWeek[x] > xBefore) or fixWeek[x] == 0):
                 #VOU SOMANDO O VALOR PARA O ESPACO DA LISTA
                 somaSemana[semana] += df['Novos Casos'][y]
+                #print(str(x) + " | " + str(self.dataset["Data"].iloc[y]) + " | Valor fixado " + str(fixWeek[x]))
+                #print("--")
+
 
                 #CASO MUDE DE SEMANA EU PASSO PRA PROXIMA PARTE DA LISTA
                 if (fixWeek[x] == 6):
                     semana += 1
-                    somaSemana.append(0)        
+                    somaSemana.append(0)
+                    #print(" ---- SKIP -----")            
+
 
             y += 1
             xBefore = fixWeek[x]
@@ -241,26 +226,40 @@ class analiseCampos:
         except:
             date_object2 = self.dataset.Data.iloc[-1]
             
+        #a hora eu ainda nao sei de onde tira calma la
+        #hour_object = datetime.strptime(hora, '%H:%M')
+        #hour_object2 = datetime.strptime('18:44', '%H:%M')
+
         if(date_object > (date_object2)):
             return(True)
 
+        #elif(date_object == date_object2):
+        #    if(hour_object > hour_object2):
+        #        return(True)
+        #    else: return(False)
         else: return(False)
 
-    #Saves the new covid data
     def salvar_excel(self, get):   
-        #Creates a list with covid data
+
         newRow = [[get.date_finder(), get.numero_casos(), get.obitos(), get.obitos(), '0', get.sindrome_gripal(), get.srag(), get.vacina()[0], get.ocupacao_leitos()[0], get.ocupacao_leitos()[1], get.fila_espera(), get.vacina()[1], get.vacina()[2]]]
 
-        #Creates a pandas dataframe with the new data
         df = pandas.DataFrame(newRow, columns = ['Data', 'Casos Confirmados', 'Obito', 'Obitos Confirmados', 'Investigando', 'Sindrome Gripal', 'Sindrome Respiratoria Aguda Grave', 'Vacinados', 'UTI', 'Clinica', 'Fila de Espera', 'Segunda Dose', 'Dose Única']) 
 
-        #Append the dataframe to the existing covid data
+        #print(df)
+
         self.dataset = self.dataset.append(df)
 
-        #Save it
         self.dataset.to_excel('./Casos_Campos.xlsx', index = False, header=True)
         
-    #Plot the sum of all cases and deaths over time
+        
+    def twitter_auth():
+        # Authenticate to Twitter
+        auth = tweepy.OAuthHandler("Insert here your credentials", "Insert here your credentials")
+        auth.set_access_token("Insert here your credentials", "Insert here your credentials")
+
+        # Create API object
+        api = tweepy.API(auth)
+
     def graph_confirmados_obitos(self):
         plt.close()
         ax = plt.gca()
@@ -275,7 +274,6 @@ class analiseCampos:
         plt.show
         #plt.close()
 
-    #Plot the covid confirmation graph by day
     def graph_confirmados_diarios(self):
         
             plt.close('all')
@@ -319,7 +317,6 @@ class analiseCampos:
             plt.savefig("./confirmados_diarios.png", bbox_inches = 'tight')
             plt.close()
             
-    #Plot the death confirmation graph by day
     def graph_obitos_diarios(self):
         
             plt.close('all')
@@ -376,7 +373,6 @@ class analiseCampos:
             plt.close()
         
         
-    #They used to invert SRAG and Sindrome Gripal, so i had to make a function to check if it happened
     #Retorna na ordem SRAG e Sindrome Gripal
     #Caso a prefeitura tenha postado invertido, desinverte
     def value_checker(self, results):
@@ -387,8 +383,6 @@ class analiseCampos:
         SRAG = sindrome_respiratoria(results)[0]
         gripal = sindrome_gripal(results)[0]
 
-        #It checks if the numbers are close enough to be believable
-        #If the numbers are not believable, the code inverts. It always worked. Nice and simple solution
         #Para checar se o SRAG novo eh mais proximo do antigo
         if (abs(SRAG - int(self.dataset["Sindrome Respiratoria Aguda Grave"].iloc[-1]))) <= abs(SRAG - int(self.dataset["Sindrome Gripal"].iloc[-1])):
             flag[0] = 1
@@ -396,17 +390,17 @@ class analiseCampos:
         if (abs(gripal - int(self.dataset["Sindrome Gripal"].iloc[-1]))) <= abs(gripal - int(self.dataset["Sindrome Respiratoria Aguda Grave"].iloc[-1])):
             flag[1] = 1
 
-        #Returns the numbers as it should be
+        #print(flag)
         if (flag == [1,1]):
             return([SRAG, gripal, 1, 1])
         elif (flag == [0,0]):
             return([gripal, SRAG, 0, 0])
-        else: #Looking back it's probably for debugging and I never removed?
+        else:
             return([SRAG, gripal, 2, 2])
         
 #-------------------------------------------------------------------------------
         
-#Made by Italo s2 to help me have a better graph
+
 def date_ticks_spitter(date_vector):
     month_dict = {
         "Jan": "Jan",
@@ -433,19 +427,17 @@ def date_ticks_spitter(date_vector):
     date_ticks = ["{}\n{}".format(tick.day, month_dict[tick.strftime("%b")]) for tick in date_ticks]
     return num_dates_of_interest, date_ticks, min_date, max_date
     
-
-#This function creates the graphs and post on twitter
+    
 def analiseLoop(get):
-    print("Iniciando")
+    print("analisei")
+    #camposDataframe = pandas.read_excel('./Casos_Campos.xlsx')
 
-    #It has 2 post possibilities:
-    #If it rolls higher than 90, it will post the second graph showing the evolution of covid and death confirmation by summing each day on the second tweet of the thread
-    #it it rolls lower than it, i'll post the daily death confirmation and it's rolling mean
+    
     tipo = random.randint(1, 100)
 
-    cmps = analiseCampos(pandas.read_excel('./Casos_Campos.xlsx')) #loading the saved data
+    cmps = analiseCampos(pandas.read_excel('./Casos_Campos.xlsx'))
     
-    cmps.novos_casos() #
+    cmps.novos_casos()
     cmps.novos_obitos()
     cmps.graph_confirmados_diarios()
     
@@ -459,8 +451,8 @@ def analiseLoop(get):
         
     
     # Authenticate to Twitter
-    auth = tweepy.OAuthHandler("Ok ok again you're not", "going to use my twitter developer stuff")
-    auth.set_access_token("I know I know I should not hard code it", "i'll change in the future doe")
+    auth = tweepy.OAuthHandler("Insert here your credentials", "Insert here your credentials")
+    auth.set_access_token("Insert here your credentials", "Insert here your credentials")
 
     # Create API object
     api = tweepy.API(auth)
@@ -483,10 +475,6 @@ def analiseLoop(get):
     
     msg = [['t'],['t']]
     
-    #When I made this code back mid 2020, the covid death confirmation took some days
-    #So there were two death's categories: "confirmed" and "investigation"
-    #My code used to specify how many death cases were under investigation, if there was any
-    #Nowdays it's not relevant anymore, but this piece of code remains
     #Se tiver algum obito em investigacao, ele especifica
     if int(cmps.dataset.Obito.iloc[-1]) > int(cmps.dataset['Obitos Confirmados'].iloc[-1]):
         msg[0] = "DIA " + str(data_hoje) + " \n\nCasos confirmados: " + str(cmps.dataset['Casos Confirmados'].iloc[-1]) + " (+" + str(cmps.dataset["Novos Casos"].iloc[-1]) + ") " + "  \n\nÓbitos: " + str(cmps.dataset.Obito.iloc[-1]) + " (" + str(cmps.dataset.Obito.iloc[-1] - cmps.dataset['Obitos Confirmados'].iloc[-1]) + " em investigação)" + "\n\nÓbitos Confirmados: " + str(cmps.dataset['Obitos Confirmados'].iloc[-1]) + " (" + str(cmps.dataset["Novos Obitos Confirmados"].iloc[-1]) + " novos)" + "\n\nSíndrome Respiratória Aguda Grave: " + str(int(cmps.dataset['Sindrome Respiratoria Aguda Grave'].iloc[-1])) + "\n\nSíndrome Gripal: " + str(int(cmps.dataset['Sindrome Gripal'].iloc[-1])) + "\n\nVacinados: " + str(int(cmps.dataset['Vacinados'].iloc[-1])) + " (" + str(int(cmps.dataset['Vacinados'].iloc[-1] - cmps.dataset['Vacinados'].iloc[-2])) + " novos)" + "\n\nGráfico com número de casos por dia:\n(1/2)"
@@ -497,9 +485,6 @@ def analiseLoop(get):
 
     variacao_ocupacao_leitos = (cmps.dataset['UTI'].iloc[-1] - cmps.dataset['UTI'].iloc[-2])
 
-    #Back to the two thread possibilities I explained above
-    #Here I format the tweet text of the second part of the thread
-    #As you can see, I didn't know how use %s back them so it's kinda messy
     if tipo > 90:
         if variacao_ocupacao_leitos >= 0.0:
             msg[1] = "Ocupação de leitos de UTI: " + str(cmps.dataset['UTI'].iloc[-1]) + "%" + " (+" + str(round(variacao_ocupacao_leitos, 2)) + "%)" + "\n\nLetalidade: " + str(round(((cmps.dataset['Obitos Confirmados'].iloc[-1]/cmps.dataset["Casos Confirmados"].iloc[-1])*100), 2)) + "%" "\n\nEsse dia foi responsável por " + str(round(((cmps.dataset["Novos Casos"].iloc[-1]/cmps.dataset["Casos Confirmados"].iloc[-1])*100), 2)) + "% do total de casos\n\nCurva de Casos Confirmados e Óbitos:\n(2/2)"
@@ -514,21 +499,22 @@ def analiseLoop(get):
         elif variacao_ocupacao_leitos < 0.0:
             msg[1] = "Ocupação de leitos de UTI: " + str(cmps.dataset['UTI'].iloc[-1]) + "%" + " (" + str(round(variacao_ocupacao_leitos, 2)) + "%)" + "\n\nOcupação de leitos clínicos: " + str(cmps.dataset['Clinica'].iloc[-1]) + "%" + "\n\nFila de espera para leitos: " + str(int(cmps.dataset['Fila de Espera'].iloc[-1])) + "\n\nLetalidade: " + str(round(((cmps.dataset['Obitos Confirmados'].iloc[-1]/cmps.dataset["Casos Confirmados"].iloc[-1])*100), 2)) + "%" "\n\nEsse dia foi responsável por " + str(round(((cmps.dataset["Novos Casos"].iloc[-1]/cmps.dataset["Casos Confirmados"].iloc[-1])*100), 2)) + "% do total de casos\n\nGráfico de Óbitos Confirmados por Dia:\n(2/2)"
     
-    tweet = api.update_with_media(img_path[0], msg[0])
-    #it tweets and get's the tweet id so it can answer the previus tweet and make a thread
+    tweet = api.update_status_with_media(msg[0], img_path[0])
+
     tweetAntes = tweet.id_str
 
-    #tweeting
     for i in range(1,2):
-        #the thread has only one answer
-        tweet = api.update_status(msg[i], tweetAntes, media_ids = [img_path[i].media_id])
+
+        tweet = api.update_status(msg[i], in_reply_to_status_id = tweetAntes, media_ids = [img_path[i].media_id])
         tweetAntes = tweet.id_str
 
         
 def __init__():
     print('initei')
+    #Le a planilha do Excel
+    #camposDataframe = pandas.read_excel('./Casos_Campos.xlsx')
 
-    #Instanciando a classe Covid_Data, responsável pela extração dos dados de Covid direto do site da prefeitura
+    #Lê o site da prefeitura
     get = Covid_Data()
 
     #Pega a url do boletim mais novo
@@ -545,10 +531,9 @@ def __init__():
     oldDate = datetime.strptime(cmps.dataset['Data'].iloc[-1], "%d/%m/%Y")
     newDate = datetime.strptime(dataHora, "%d/%m/%Y")
     
-    #The code run's each 20 minutes and checks if there's new Covid data to extract
     #Se ontem teve dado novo:
     if (newDate - oldDate).days == 1:
-        print("Continuando normal")
+        print("entrei")
         cmps.salvar_excel(get)
         del cmps
         analiseLoop(get)
@@ -557,7 +542,7 @@ def __init__():
     #Aqui ele repete o ultimo dia antes do dia pulado para adicionar dado novo depois
     elif (newDate - oldDate).days > 1:
         print("Nao ha novos dados. Repetindo anterior")
-        #Repete os dados por quantos dias tiverem sido pulados
+        #Repete repetindo dados por quantos dias tiverem sido pulados
         for i in range(1, (newDate - oldDate).days):
             inserterDate = datetime.strftime(oldDate + timedelta(days=i), "%d/%m/%Y")
             cmps.dataset = cmps.dataset.append(cmps.dataset.iloc[-1])
@@ -568,8 +553,7 @@ def __init__():
         del cmps
         analiseLoop(get)
         
-    else: #If there's no new covid data, nothing happens
+    else:
         None
-
-if __name__ == "__main__": 
-    __init__()
+        
+__init__()
