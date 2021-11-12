@@ -13,8 +13,6 @@ class analiseCampos:
     def __init__(self, dataset):
         self.dataset = dataset
     
-    #The government gives the total amount of covid cases
-    #This organizes those cases by daily confirmation
     def novos_casos(self):
         
         #CODIGO PARA SEPARAR NOVOS CASOS POR DIA
@@ -27,8 +25,7 @@ class analiseCampos:
     
         self.dataset.insert(2, 'Novos Casos', novosCasos)
   
-    #The government gives the total amount of deaths
-    #This organizes those death by daily confirmation    
+      
     def novos_obitos(self):
     
         #CODIGO PARA SEPARAR NOVOS OBITOS POR DIA
@@ -42,7 +39,7 @@ class analiseCampos:
         self.dataset.insert(5, 'Novos Obitos Confirmados', novosObitos)
         
         
-    #Separates the covid death confirmations by week 
+        
     def obitos_por_semana(self):
         print("Óbitos")
         #Script para separar os casos por semana
@@ -66,6 +63,10 @@ class analiseCampos:
         xBefore = fixWeek[self.dataset.Data.dt.dayofweek.iloc[0]]
         for x in self.dataset.Data.dt.dayofweek:
 
+            #print("somaSemana: ", somaSemana)
+            #print("semana: ", semana)
+            #print("xBefore: " + str(xBefore))
+
             #CHECA SE EH UM PROXIMO DIA OU O PRIMEIRO DA SEMANA JA QUE 0 EH MENOR QUE 6
             if ((fixWeek[x] > xBefore) or fixWeek[x] == 0):
                 #VOU SOMANDO O VALOR PARA O ESPACO DA LISTA
@@ -87,7 +88,7 @@ class analiseCampos:
         #cria novo dataframe por semana
         return(pandas.DataFrame(somaSemana, columns = ['Novos Óbitos']))
     
-    #Separates the covid cases confirmations by week 
+    
     def por_semana(self):
         print("Casos")
         #Script para separar os casos por semana
@@ -110,6 +111,10 @@ class analiseCampos:
 
         xBefore = fixWeek[self.dataset.Data.dt.dayofweek.iloc[0]]
         for x in self.dataset.Data.dt.dayofweek:
+
+            #print("somaSemana: ", somaSemana)
+            #print("semana: ", semana)
+            #print("xBefore: " + str(xBefore))
 
             #CHECA SE EH UM PROXIMO DIA OU O PRIMEIRO DA SEMANA JA QUE 0 EH MENOR QUE 6
             if ((fixWeek[x] > xBefore) or fixWeek[x] == 0):
@@ -154,7 +159,6 @@ class analiseCampos:
         #    else: return(False)
         else: return(False)
 
-    #Saves the new covid data OLD VERSION
     def salvar_excel(self, results):   
         #Pega os obitos separado por ser uma lista com CONFIRMADOS e INVESTIGANDO
         obitosLidos = obitos(results)
@@ -181,7 +185,16 @@ class analiseCampos:
         
 
 
-        self.dataset.to_excel('./Casos_Campos.xlsx', index = False, header=True)
+        self.dataset.to_excel('/home/pi/Desktop/Casos_Campos.xlsx', index = False, header=True)
+        
+        
+    def twitter_auth():
+        # Authenticate to Twitter
+        auth = tweepy.OAuthHandler("Insert here your credentials", "Insert here your credentials")
+        auth.set_access_token("Insert here your credentials", "Insert here your credentials")
+
+        # Create API object
+        api = tweepy.API(auth)
 
     def graph_confirmados_obitos(self):
         plt.close()
@@ -193,7 +206,7 @@ class analiseCampos:
         plt.ylabel("Pessoas")
         plt.xlabel("Dias")
         plt.xticks(rotation=45)
-        plt.savefig("./confirmados_e_obitos.png")
+        plt.savefig("/home/pi/Desktop/confirmados_e_obitos.png")
         plt.show
         #plt.close()
 
@@ -214,9 +227,20 @@ class analiseCampos:
 #-------------------------------------------------------------------------------
         
 
+    
+    
+def urlFinder():
+
+    URL = 'https://cidac.campos.rj.gov.br/coronavirus/'
+    page = requests.get(URL)
+
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    #PROCURA ONDE O ID = BOLETIM
+    return(soup.find(id='boletim'))
+
 
 #RETORNA COMO STR DATA E HORA NUMA LISTA
-#NOT USED ANYMORE I LEFT IT HERE FOR LEGACY
 def dia_hora(results):
     
     #PROCURA ONDE TEM class = card card-boletim card-obitos
@@ -229,6 +253,7 @@ def dia_hora(results):
             continue
             
     #pega os valores da string e retorna em uma lista
+
     data_hora_return = []
     
     data_hora_return.append(dia_e_hora.text.strip()[13:23])
@@ -237,7 +262,6 @@ def dia_hora(results):
     
     return(data_hora_return)  
 
-#Plot covid death confirmation by week
 def plot_semanal_obitos(cmpsSemanal):
    
     plt.close()
@@ -267,11 +291,11 @@ def plot_semanal_obitos(cmpsSemanal):
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.spines['left'].set_visible(False)
-    plt.savefig("./obitos_acumulo_semanal.png", bbox_inches = 'tight')
+    plt.savefig("/home/pi/Desktop/obitos_acumulo_semanal.png", bbox_inches = 'tight')
     #plt.show()
 
 
-#Plot the covid case confirmation by week
+
 def plot_semanal(cmpsSemanal):
    
     plt.close()
@@ -301,26 +325,26 @@ def plot_semanal(cmpsSemanal):
     ax.spines['top'].set_visible(False)
     ax.spines['left'].set_visible(False)
     #plt.show()
-    plt.savefig("./acumulo_semanal.png", bbox_inches = 'tight')
+    plt.savefig("/home/pi/Desktop/acumulo_semanal.png", bbox_inches = 'tight')
     
 #RODA ROTINA
 def __init__():
 
 
     #Coloca o dataframe num objeto para ser trabalhado
-    cmps = analiseCampos(pandas.read_excel('./Casos_Campos.xlsx'))
+    cmps = analiseCampos(pandas.read_excel('/home/pi/Desktop/Casos_Campos.xlsx'))
     
     print("analisei")
     
-    cmps.novos_casos() #Separate the covid confirmation by day
-    cmpsSemanal = cmps.por_semana() #returns dataframe with weekly covid confirmation
-    cmps.novos_obitos() #Separate covid deaths by day
-    obitosSemanal = cmps.obitos_por_semana() #returns dataframe with weekly deaths
+    cmps.novos_casos()
+    cmpsSemanal = cmps.por_semana()
+    cmps.novos_obitos()
+    obitosSemanal = cmps.obitos_por_semana()
     
     
     # Authenticate to Twitter
-    auth = tweepy.OAuthHandler("Ok ok again you're not", "going to use my twitter developer stuff")
-    auth.set_access_token("I know I know I should not hard code it", "i'll change in the future doe")
+    auth = tweepy.OAuthHandler("Insert here your credentials", "Insert here your credentials")
+    auth.set_access_token("Insert here your credentials", "Insert here your credentials")
 
     # Create API object
     api = tweepy.API(auth)
@@ -330,8 +354,8 @@ def __init__():
     
     img_path = [['t'],['t']]
     
-    img_path[0] = './acumulo_semanal.png' #graph image path - weekly cases
-    img_path[1] = api.media_upload('./obitos_acumulo_semanal.png') #graph image path - weekly death
+    img_path[0] = '/home/pi/Desktop/acumulo_semanal.png'
+    img_path[1] = api.media_upload('./obitos_acumulo_semanal.png')
     
     #index da Pirmeira data que sera mostrada
     indexComeco = (cmps.dataset.index[cmps.dataset.Data.dt.dayofweek == 6][-1])
@@ -354,24 +378,22 @@ def __init__():
     
     msg = [['t'],['t']]
     
-    #msg to tweet
     msg[0] = "Foram %s novos casos e %s óbitos confirmados na última semana\n\nDo dia %s ao dia %s \n1/2" % (acumulado, obitosAcumulados, diaComeco, diaFinal)
 
-    #Second tweet of the thread
     msg[1] = "Gráfico de óbitos por semana: \n2/2"
 
     print(msg)
     
     print(cmpsSemanal)
     
-    tweet = api.update_with_media(img_path[0], msg[0])
-    #it tweets and get's the tweet id so it can answer the previus tweet and make a thread
+    tweet = api.update_status_with_media(msg[0], img_path[0])
+    
     tweetAntes = tweet.id_str
     
     for i in range(1,2):
-        #the thread has only one answer
-        tweet = api.update_status(msg[i], tweetAntes, media_ids = [img_path[i].media_id])
+
+        tweet = api.update_status(msg[i], in_reply_to_status_id = tweetAntes, media_ids = [img_path[i].media_id])
         tweetAntes = tweet.id_str
 
-if __name__ == "__main__":
-    __init__()
+        
+__init__()
