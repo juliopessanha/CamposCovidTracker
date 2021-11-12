@@ -3,28 +3,27 @@ import pandas as pd
 import tweepy
 import matplotlib.pyplot as plt
 
-path = 'your/folder/path'
 #path = ''
-img_path = path + "vacinometro.jpg"
+img_path = "./vacinometro.jpg"
 file_path = path + 'Casos_Campos.xlsx'
 
-df = pd.read_excel(file_path) #reading the excel file with covid data
+df = pd.read_excel(file_path)
 
-total = 383173 #total amount of 18+ ppl in Campos. Got it from Rio de Janeiro's official site
-primeira_dose = int(df['Vacinados'].iloc[-1])  #first dose
-segunda_dose = int(df['Segunda Dose'].iloc[-1]) #second dose
-dose_unica = int(df['Dose Única'].iloc[-1]) #unique dose
-totalmente_imunizados = segunda_dose + dose_unica #totally imune (first + second dose)
+total = 383173
+primeira_dose = int(df['Vacinados'].iloc[-1])
+segunda_dose = int(df['Segunda Dose'].iloc[-1])
+dose_unica = int(df['Dose Única'].iloc[-1])
+totalmente_imunizados = segunda_dose + dose_unica
 
-pct_primeira_dose = round((primeira_dose/total)*100) #% of the population with first dose
+pct_primeira_dose = round((primeira_dose/total)*100)
 
-pct_segunda_dose = round((segunda_dose/total)*100) #% of the population with second
+pct_segunda_dose = round((segunda_dose/total)*100)
 
-pct_dose_unica = round((dose_unica/total)*100) #% of the unique dose
+pct_dose_unica = round((dose_unica/total)*100)
 
-pct_totalmente_imunizados = round((totalmente_imunizados/total)*100) #% of the population totally imune
+pct_totalmente_imunizados = round((totalmente_imunizados/total)*100)
 
-category_names = ['Vacinados', 'Não Vacinados', 'placeholder']
+category_names = ['Vacinados', 'Não Vacinados', 'penis']
 results = {
     '1ª Dose': [pct_totalmente_imunizados, (pct_primeira_dose - pct_totalmente_imunizados), (100 - pct_primeira_dose)]
 }
@@ -60,7 +59,7 @@ def month_checker(mes):
     elif mes == '12':
         return('Dezembro')
     
-#Taking the covid data to make the bar graph. Got it's base from matplotlib official site
+
 def survey(results, category_names):
     """
     Parameters
@@ -80,9 +79,9 @@ def survey(results, category_names):
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
     ax.set_xlim(0, np.sum(data, axis=1).max())
-    lightblue = '#3AA6E2' #lightblue hex color code
-    darkblue = '#3A66A8' #darkblue hex color code
-    grey = '#AAA6A6' #grey hex color code
+    lightblue = '#3AA6E2'
+    darkblue = '#3A66A8'
+    grey = '#AAA6A6'
     colors = [darkblue, lightblue, 'lightgrey']
     for i, (colname, color) in enumerate(zip(category_names, colors)):
 
@@ -104,13 +103,10 @@ def survey(results, category_names):
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     
-    #Defining line height of each row of text
     first_line_height = 10.3
     second_line_height = 8.4
     third_line_height = 6.5
     forth_line_height = 4.5
-
-    #DOWN HERE I'M BASIALLY DRAWING EVERY SINGLE LINE OF TEXT BY HAND. CRAFTING THE FINAL FORM STEP BY STEP
 
     first_text = 'Em ' + df.Data.iloc[-1][0:2] + ' de ' + month_checker(df.Data.iloc[-1][3:5]) + ' de ' + df.Data.iloc[-1][6:] + ","
 
@@ -159,31 +155,27 @@ def survey(results, category_names):
     #plt.show()
     plt.savefig("vacinometro.jpg", bbox_inches = 'tight',pad_inches=0.36)
     plt.close()
-    #return(fig, ax) #I'm returning but not using, could be removed since I get the saved figure
+    return fig, ax
 
 
 def tweet():
     # Authenticate to Twitter
-    auth = tweepy.OAuthHandler("ok guys not gonna happen", "yes I must stop hard coding this I know")
-    auth.set_access_token("i'm going to study how to make it better", "for now you can just copy and paste yours")
+    auth = tweepy.OAuthHandler("Insert here your credentials", "Insert here your credentials")
+    auth.set_access_token("Insert here your credentials", "Insert here your credentials")
 
     # Create API object
     api = tweepy.API(auth)
     
-    #twitter text
     msg = 'Vacinômetro Campos dos Goytacazes\n\n' \
     'Quantidade total de doses aplicadas:\n' \
     '   -Primeira Dose: %s (%s%%)\n   -Segunda Dose: %s (%s%%)\n   -Dose Única: %s (%s%%)' % (primeira_dose, pct_primeira_dose, segunda_dose, pct_segunda_dose, dose_unica, pct_dose_unica)
     
-    #twitter image
-    img_path = "vacinometro.jpg"
+    #img_path = "vacinometro.jpg"
     
     print(msg)
-    
-    #twitter post
-    api.update_with_media(img_path, msg)
+    api.update_status_with_media(msg, img_path)
 
 
 if __name__ == '__main__':
-    survey(results, category_names) #get the xlsx file and create the image to post
-    tweet() #post on twitter
+    survey(results, category_names)
+    tweet()
