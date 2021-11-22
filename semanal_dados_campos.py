@@ -7,6 +7,9 @@ from datetime import datetime
 import tweepy
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+folder_path = os.path.abspath("./")
 
 class analiseCampos:
     
@@ -219,7 +222,7 @@ class analiseCampos:
         plt.ylabel("Pessoas")
         plt.xlabel("Dias")
         plt.xticks(rotation=18)
-        plt.savefig("./confirmados_diarios.png")
+        plt.savefig(folder_path + "/confirmados_diarios.png")
         #plt.show()
         plt.close()
 
@@ -354,8 +357,8 @@ def __init__():
     
     img_path = [['t'],['t']]
     
-    img_path[0] = '/home/pi/Desktop/acumulo_semanal.png'
-    img_path[1] = api.media_upload('./obitos_acumulo_semanal.png')
+    img_path[0] = folder_path + '/acumulo_semanal.png'
+    img_path[1] = api.media_upload(folder_path + '/obitos_acumulo_semanal.png')
     
     #index da Pirmeira data que sera mostrada
     indexComeco = (cmps.dataset.index[cmps.dataset.Data.dt.dayofweek == 6][-1])
