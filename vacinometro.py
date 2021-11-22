@@ -2,10 +2,12 @@ import numpy as np
 import pandas as pd
 import tweepy
 import matplotlib.pyplot as plt
+import os
 
+path = os.path.abspath("./")
 #path = ''
-img_path = "./vacinometro.jpg"
-file_path = path + 'Casos_Campos.xlsx'
+img_path = path + "/vacinometro.jpg"
+file_path = path + '/Casos_Campos.xlsx'
 
 df = pd.read_excel(file_path)
 
