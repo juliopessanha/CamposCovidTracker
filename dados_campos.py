@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import random
 import re
+import os
+
+folder_path = os.path.abspath("./")
 
 class Covid_Data():
     
@@ -249,7 +252,7 @@ class analiseCampos:
 
         self.dataset = self.dataset.append(df)
 
-        self.dataset.to_excel('./Casos_Campos.xlsx', index = False, header=True)
+        self.dataset.to_excel(folder_path + '/Casos_Campos.xlsx', index = False, header=True)
         
         
     def twitter_auth():
@@ -270,7 +273,7 @@ class analiseCampos:
         plt.ylabel("Casos")
         plt.xlabel("Dias")
         plt.xticks(rotation=18)
-        plt.savefig("./confirmados_e_obitos.png", bbox_inches = 'tight')
+        plt.savefig(folder_path + "/confirmados_e_obitos.png", bbox_inches = 'tight')
         plt.show
         #plt.close()
 
@@ -314,7 +317,7 @@ class analiseCampos:
             plt.legend(['Média Móvel', 'Novos Casos'], fontsize = 14)
             plt.show()
 
-            plt.savefig("./confirmados_diarios.png", bbox_inches = 'tight')
+            plt.savefig(folder_path + "/confirmados_diarios.png", bbox_inches = 'tight')
             plt.close()
             
     def graph_obitos_diarios(self):
@@ -369,7 +372,7 @@ class analiseCampos:
             plt.legend(['Média Móvel', 'Novos Óbitos'], fontsize = 16)
             plt.show()
 
-            plt.savefig("./confirmados_e_obitos.png", bbox_inches = 'tight')
+            plt.savefig(folder_path + "/confirmados_e_obitos.png", bbox_inches = 'tight')
             plt.close()
         
         
@@ -430,12 +433,12 @@ def date_ticks_spitter(date_vector):
     
 def analiseLoop(get):
     print("analisei")
-    #camposDataframe = pandas.read_excel('./Casos_Campos.xlsx')
+    #camposDataframe = pandas.read_excel(folder_path + '/Casos_Campos.xlsx')
 
     
     tipo = random.randint(1, 100)
 
-    cmps = analiseCampos(pandas.read_excel('./Casos_Campos.xlsx'))
+    cmps = analiseCampos(pandas.read_excel(folder_path + '/Casos_Campos.xlsx'))
     
     cmps.novos_casos()
     cmps.novos_obitos()
@@ -470,8 +473,8 @@ def analiseLoop(get):
     img_path = [['t'],['t']]
     
 
-    img_path[0] = './confirmados_diarios.png'
-    img_path[1] = api.media_upload("./confirmados_e_obitos.png")
+    img_path[0] = folder_path + '/confirmados_diarios.png'
+    img_path[1] = api.media_upload(folder_path + "/confirmados_e_obitos.png")
     
     msg = [['t'],['t']]
     
@@ -512,7 +515,7 @@ def analiseLoop(get):
 def __init__():
     print('initei')
     #Le a planilha do Excel
-    #camposDataframe = pandas.read_excel('./Casos_Campos.xlsx')
+    #camposDataframe = pandas.read_excel(folder_path + '/Casos_Campos.xlsx')
 
     #Lê o site da prefeitura
     get = Covid_Data()
@@ -526,7 +529,7 @@ def __init__():
     dataHora = get.date_finder()
     print(dataHora)
     #Coloca o dataframe num objeto para ser trabalhado
-    cmps = analiseCampos(pandas.read_excel('./Casos_Campos.xlsx', dtype={0:'object', 1:'object',2:'object', 3:'object', 4:'object', 5:'object', 6:'object', 7:'object', 8:'object', 9:'object', 10:'object', 11:'object', 12:'object'}))
+    cmps = analiseCampos(pandas.read_excel(folder_path + '/Casos_Campos.xlsx', dtype={0:'object', 1:'object',2:'object', 3:'object', 4:'object', 5:'object', 6:'object', 7:'object', 8:'object', 9:'object', 10:'object', 11:'object', 12:'object'}))
     #Checa se a nova atualização veio depois da ultima informação do excel
     oldDate = datetime.strptime(cmps.dataset['Data'].iloc[-1], "%d/%m/%Y")
     newDate = datetime.strptime(dataHora, "%d/%m/%Y")
